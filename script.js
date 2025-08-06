@@ -13,38 +13,44 @@ class InvalidExprError extends Error {
 }
 
 function evalString(str) {
-  try {
-    str = str.trim();
+  str = str.trim();
 
-    const validChars = /^[\d+\-*/\s]+$/;
-    if (!validChars.test(str)) {
-      const invalidChar = str.split('').find(ch => !ch.match(/[\d\s+\-*/]/));
-      throw new OutOfRangeError(invalidChar);
-    }
-
-    const compact = str.replace(/\s+/g, '');
-    if (/[\+\-\*\/]{2,}/.test(compact)) {
-      throw new InvalidExprError();
-    }
-
-    if (/^[+\/*]/.test(compact)) {
-      throw new SyntaxError("Expression should not start with invalid operator");
-    }
-
-    if (/[\+\-\*\/]$/.test(compact)) {
-      throw new SyntaxError("Expression should not end with invalid operator");
-    }
-
-    const result = eval(compact);
-    alert("passed");
-    console.log(result);
-  } catch (err) {
-    alert("failed");
-    throw err; // Cypress will catch this
+  // Check for invalid characters
+  const validChars = /^[\d+\-*/\s]+$/;
+  if (!validChars.test(str)) {
+    const invalidChar = str.split('').find(ch => !ch.match(/[\d\s+\-*/]/));
+    throw new OutOfRangeError(invalidChar);
   }
+
+  const compact = str.replace(/\s+/g, '');
+
+  // Check for invalid combinations like ++, +/, etc.
+  if (/[\+\-\*\/]{2,}/.test(compact)) {
+    throw new InvalidExprError();
+  }
+
+  // Starts with invalid operator
+  if (/^[+\/*]/.test(compact)) {
+    throw new SyntaxError("Expression should not start with invalid operator");
+  }
+
+  // Ends with operator
+  if (/[\+\-\*\/]$/.test(compact)) {
+    throw new SyntaxError("Expression should not end with invalid operator");
+  }
+
+  // All good, evaluate
+  const result = eval(compact);
+  alert("passed");
+  console.log("Result:", result);
 }
 
-function evaluate() {
-  const input = document.getElementById("input1").value;
-  evalString(input);
+function handleEvaluate() {
+  try {
+    const input = document.getElementById("input1").value;
+    evalString(input);
+  } catch (err) {
+    alert("failed");
+    throw err; // Required so Cypress can catch and check error details
+  }
 }
